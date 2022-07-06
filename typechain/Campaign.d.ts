@@ -25,10 +25,13 @@ interface CampaignInterface extends ethers.utils.Interface {
     "campaignDeadline()": FunctionFragment;
     "campaignGoal()": FunctionFragment;
     "creator()": FunctionFragment;
+    "hasDeadlinePassed()": FunctionFragment;
     "isSuccessful()": FunctionFragment;
+    "numPledges()": FunctionFragment;
     "pledge()": FunctionFragment;
     "pledges(address)": FunctionFragment;
     "totalPledges()": FunctionFragment;
+    "updateDeadlineState(bool)": FunctionFragment;
     "withdraw()": FunctionFragment;
   };
 
@@ -42,7 +45,15 @@ interface CampaignInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "creator", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "hasDeadlinePassed",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "isSuccessful",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "numPledges",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "pledge", values?: undefined): string;
@@ -50,6 +61,10 @@ interface CampaignInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "totalPledges",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "updateDeadlineState",
+    values: [boolean]
   ): string;
   encodeFunctionData(functionFragment: "withdraw", values?: undefined): string;
 
@@ -63,13 +78,22 @@ interface CampaignInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "creator", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "hasDeadlinePassed",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "isSuccessful",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "numPledges", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pledge", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pledges", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "totalPledges",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateDeadlineState",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
@@ -127,7 +151,11 @@ export class Campaign extends BaseContract {
 
     creator(overrides?: CallOverrides): Promise<[string]>;
 
+    hasDeadlinePassed(overrides?: CallOverrides): Promise<[boolean]>;
+
     isSuccessful(overrides?: CallOverrides): Promise<[boolean]>;
+
+    numPledges(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     pledge(
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -136,6 +164,11 @@ export class Campaign extends BaseContract {
     pledges(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     totalPledges(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    updateDeadlineState(
+      _hasPassed: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -148,7 +181,11 @@ export class Campaign extends BaseContract {
 
   creator(overrides?: CallOverrides): Promise<string>;
 
+  hasDeadlinePassed(overrides?: CallOverrides): Promise<boolean>;
+
   isSuccessful(overrides?: CallOverrides): Promise<boolean>;
+
+  numPledges(overrides?: CallOverrides): Promise<BigNumber>;
 
   pledge(
     overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -157,6 +194,11 @@ export class Campaign extends BaseContract {
   pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
+
+  updateDeadlineState(
+    _hasPassed: boolean,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   withdraw(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -169,13 +211,22 @@ export class Campaign extends BaseContract {
 
     creator(overrides?: CallOverrides): Promise<string>;
 
+    hasDeadlinePassed(overrides?: CallOverrides): Promise<boolean>;
+
     isSuccessful(overrides?: CallOverrides): Promise<boolean>;
+
+    numPledges(overrides?: CallOverrides): Promise<BigNumber>;
 
     pledge(overrides?: CallOverrides): Promise<void>;
 
     pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
+
+    updateDeadlineState(
+      _hasPassed: boolean,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     withdraw(overrides?: CallOverrides): Promise<void>;
   };
@@ -189,7 +240,11 @@ export class Campaign extends BaseContract {
 
     creator(overrides?: CallOverrides): Promise<BigNumber>;
 
+    hasDeadlinePassed(overrides?: CallOverrides): Promise<BigNumber>;
+
     isSuccessful(overrides?: CallOverrides): Promise<BigNumber>;
+
+    numPledges(overrides?: CallOverrides): Promise<BigNumber>;
 
     pledge(
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -198,6 +253,11 @@ export class Campaign extends BaseContract {
     pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
+
+    updateDeadlineState(
+      _hasPassed: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -211,7 +271,11 @@ export class Campaign extends BaseContract {
 
     creator(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    hasDeadlinePassed(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     isSuccessful(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    numPledges(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     pledge(
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -223,6 +287,11 @@ export class Campaign extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     totalPledges(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    updateDeadlineState(
+      _hasPassed: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
