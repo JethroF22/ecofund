@@ -125,6 +125,78 @@ describe("Campaign", () => {
     });
   });
 
+  describe("cancellation", () => {
+    it("cancels a new campaign", async () => {
+      const signers = await ethers.getSigners();
+      const creator = signers[0];
+      const Campaign = await ethers.getContractFactory("Campaign");
+      const campaign = await Campaign.deploy(
+        campaignGoal,
+        campaignDeadline,
+        creator.address
+      );
+      await campaign.deployed();
+
+      const donatorOne = signers[1];
+      const donatorTwo = signers[2];
+
+      const amountOne = ethers.utils.parseEther("0.1");
+      const amountTwo = ethers.utils.parseEther("1");
+
+      await campaign.connect(donatorOne).pledge({
+        value: amountOne,
+      });
+
+      await campaign.connect(donatorTwo).pledge({
+        value: amountTwo,
+      });
+
+      await campaign.connect(creator).cancelCampaign();
+
+      expect(await ethers.provider.getBalance(campaign.address)).to.equal(0);
+    });
+
+    it("only allows the creator to cancel the campaign", async () => {
+      const signers = await ethers.getSigners();
+      const creator = signers[0].address;
+      const donator = signers[1];
+      const Campaign = await ethers.getContractFactory("Campaign");
+      const campaign = await Campaign.deploy(
+        campaignGoal,
+        campaignDeadline,
+        creator
+      );
+      await campaign.deployed();
+
+      expect(
+        campaign.connect(donator).cancelCampaign()
+      ).to.eventually.be.rejectedWith("Unauthorized");
+    });
+
+    it("doesn't allow pledges to a cancelled campaign", async () => {
+      const signers = await ethers.getSigners();
+      const creator = signers[0];
+      const donator = signers[1];
+      const Campaign = await ethers.getContractFactory("Campaign");
+      const campaign = await Campaign.deploy(
+        campaignGoal,
+        campaignDeadline,
+        creator.address
+      );
+      await campaign.deployed();
+
+      const amount = ethers.utils.parseEther("0.1");
+
+      await campaign.connect(creator).cancelCampaign();
+
+      expect(
+        campaign.connect(donator).pledge({
+          value: amount,
+        })
+      ).to.eventually.be.rejectedWith("Campaign cancelled");
+    });
+  });
+
   describe("withdrawal", () => {
     it("allows creator to withdraw funds if the campaign is successful", async () => {
       campaignDeadline = new Date("2022-07-5").getTime() / 1000;

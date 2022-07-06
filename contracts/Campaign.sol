@@ -9,6 +9,7 @@ contract Campaign {
     uint256 public campaignGoal;
     uint256 public campaignDeadline;
     mapping (address => uint256) public pledges;
+    address[] public donators;
     uint256 public totalPledges = 0;
     uint256 public numPledges = 0;
     bool public hasDeadlinePassed;
@@ -39,6 +40,7 @@ contract Campaign {
         require(isActive, "Campaign cancelled");
         require(msg.value > 0, "Insufficient pledge");
         pledges[msg.sender] = msg.value;
+        donators.push(msg.sender);
         totalPledges += msg.value;
         numPledges += 1;
         if (address(this).balance >= campaignGoal) {
@@ -48,6 +50,19 @@ contract Campaign {
 
     function updateDeadlineState(bool _hasPassed) external {
         hasDeadlinePassed = _hasPassed;
+    }
+
+    function updateCampaignState(bool _state) internal {
+        isActive = _state;
+    }
+
+    function cancelCampaign() external _isCreator {
+        updateCampaignState(false);
+        for (uint256 index = 0; index < numPledges; index++) {
+            address payable donator = payable(donators[index]);
+            uint256 pledgeAmount = pledges[donator];
+            donator.transfer(pledgeAmount);
+        }
     }
 
     function withdraw() external _isCreator _isWithdrawable {
