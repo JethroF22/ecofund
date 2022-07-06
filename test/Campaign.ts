@@ -6,7 +6,7 @@ chai.use(chaiAsPromised);
 
 describe("Campaign", () => {
   const campaignGoal = ethers.utils.parseEther("1");
-  const campaignDeadline = new Date("2022-07-19").getUTCMilliseconds();
+  let campaignDeadline = new Date("2022-07-19").getUTCMilliseconds();
 
   it("creates a new campaign", async () => {
     const signers = await ethers.getSigners();
@@ -41,7 +41,7 @@ describe("Campaign", () => {
       value: amount,
     });
     expect(await campaign.pledges(donator.address)).to.equal(amount);
-    expect(await ethers.provider.getBalance(campaign.address)).to.equal(amount);
+    expect(await campaign.totalPledges()).to.equal(amount);
     expect(await campaign.isSuccessful()).to.equal(false);
   });
 
@@ -74,9 +74,99 @@ describe("Campaign", () => {
       value: amountTwo,
     });
     expect(await campaign.pledges(donatorTwo.address)).to.equal(amountTwo);
-    expect(await ethers.provider.getBalance(campaign.address)).to.equal(
-      amountOne.add(amountTwo)
-    );
+    expect(await campaign.totalPledges()).to.equal(amountOne.add(amountTwo));
     expect(await campaign.isSuccessful()).to.equal(true);
+  });
+
+  it("allows creator to withdraw funds if the campaign is successful", async () => {
+    campaignDeadline = new Date("2022-07-5").getUTCMilliseconds();
+    const signers = await ethers.getSigners();
+    const creator = signers[0];
+    const donator = signers[1];
+    const Campaign = await ethers.getContractFactory("Campaign");
+    const campaign = await Campaign.deploy(
+      campaignGoal,
+      campaignDeadline,
+      creator.address
+    );
+    await campaign.deployed();
+    const amount = ethers.utils.parseEther("1");
+
+    await campaign.connect(donator).pledge({
+      value: amount,
+    });
+
+    await campaign.connect(creator).withdraw();
+
+    expect(await ethers.provider.getBalance(campaign.address)).to.equal(0);
+  });
+
+  it("doesn't allow withdrawal before the campaign deadline has passed", async () => {
+    campaignDeadline = new Date("2022-07-19").getUTCMilliseconds();
+    const signers = await ethers.getSigners();
+    const creator = signers[0];
+    const donator = signers[1];
+    const Campaign = await ethers.getContractFactory("Campaign");
+    const campaign = await Campaign.deploy(
+      campaignGoal,
+      campaignDeadline,
+      creator.address
+    );
+    await campaign.deployed();
+    const amount = ethers.utils.parseEther("1");
+
+    await campaign.connect(donator).pledge({
+      value: amount,
+    });
+
+    expect(campaign.connect(creator).withdraw()).to.eventually.be.rejectedWith(
+      "Campaign still active"
+    );
+  });
+
+  it("doesn't allow withdrawal if the goal hasn't been reached", async () => {
+    campaignDeadline = new Date("2022-07-5").getUTCMilliseconds();
+    const signers = await ethers.getSigners();
+    const creator = signers[0];
+    const donator = signers[1];
+    const Campaign = await ethers.getContractFactory("Campaign");
+    const campaign = await Campaign.deploy(
+      campaignGoal,
+      campaignDeadline,
+      creator.address
+    );
+    await campaign.deployed();
+    const amount = ethers.utils.parseEther("0.5");
+
+    await campaign.connect(donator).pledge({
+      value: amount,
+    });
+
+    expect(campaign.connect(creator).withdraw()).to.eventually.be.rejectedWith(
+      "Campaign goals not reached"
+    );
+  });
+
+  it("doesn't allow someone besides the owner to withdraw the funds", async () => {
+    campaignDeadline = new Date("2022-07-5").getUTCMilliseconds();
+    const signers = await ethers.getSigners();
+    const creator = signers[0];
+    const donator = signers[1];
+    const Campaign = await ethers.getContractFactory("Campaign");
+    const campaign = await Campaign.deploy(
+      campaignGoal,
+      campaignDeadline,
+      creator.address
+    );
+    await campaign.deployed();
+    const amount = ethers.utils.parseEther("1");
+
+    await campaign.connect(donator).pledge({
+      value: amount,
+    });
+
+    expect(campaign.connect(donator).withdraw()).to.eventually.be.rejectedWith(
+      "Unauthorized"
+    );
   });
 });

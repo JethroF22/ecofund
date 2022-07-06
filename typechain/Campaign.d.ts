@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
   PayableOverrides,
   CallOverrides,
 } from "ethers";
@@ -27,6 +28,8 @@ interface CampaignInterface extends ethers.utils.Interface {
     "isSuccessful()": FunctionFragment;
     "pledge()": FunctionFragment;
     "pledges(address)": FunctionFragment;
+    "totalPledges()": FunctionFragment;
+    "withdraw()": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -44,6 +47,11 @@ interface CampaignInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "pledge", values?: undefined): string;
   encodeFunctionData(functionFragment: "pledges", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "totalPledges",
+    values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "withdraw", values?: undefined): string;
 
   decodeFunctionResult(
     functionFragment: "campaignDeadline",
@@ -60,6 +68,11 @@ interface CampaignInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "pledge", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pledges", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "totalPledges",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {};
 }
@@ -121,6 +134,12 @@ export class Campaign extends BaseContract {
     ): Promise<ContractTransaction>;
 
     pledges(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    totalPledges(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    withdraw(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   campaignDeadline(overrides?: CallOverrides): Promise<BigNumber>;
@@ -137,6 +156,12 @@ export class Campaign extends BaseContract {
 
   pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+  totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
+
+  withdraw(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     campaignDeadline(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -149,6 +174,10 @@ export class Campaign extends BaseContract {
     pledge(overrides?: CallOverrides): Promise<void>;
 
     pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
+
+    withdraw(overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {};
@@ -167,6 +196,12 @@ export class Campaign extends BaseContract {
     ): Promise<BigNumber>;
 
     pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
+
+    withdraw(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -185,6 +220,12 @@ export class Campaign extends BaseContract {
     pledges(
       arg0: string,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    totalPledges(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    withdraw(
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }
