@@ -125,7 +125,7 @@ describe("Campaign", () => {
     });
   });
 
-  describe("cancellation", () => {
+  describe("campaign cancellation", () => {
     it("cancels a new campaign", async () => {
       const signers = await ethers.getSigners();
       const creator = signers[0];
@@ -291,6 +291,112 @@ describe("Campaign", () => {
       expect(
         campaign.connect(donator).withdraw()
       ).to.eventually.be.rejectedWith("Unauthorized");
+    });
+  });
+
+  describe("pledge cancellation", () => {
+    it("allows donators to cancel their pledges", async () => {
+      const signers = await ethers.getSigners();
+      const creator = signers[0];
+      const donator = signers[1];
+      const Campaign = await ethers.getContractFactory("Campaign");
+      const campaign = await Campaign.deploy(
+        campaignGoal,
+        campaignDeadline,
+        creator.address
+      );
+      await campaign.deployed();
+
+      const amount = ethers.utils.parseEther("0.1");
+
+      await campaign.connect(donator).pledge({
+        value: amount,
+      });
+
+      expect(await campaign.pledges(donator.address)).to.equal(amount);
+      expect(await campaign.totalPledges()).to.equal(amount);
+      expect(await campaign.numPledges()).to.equal(1);
+      expect(await ethers.provider.getBalance(campaign.address)).to.equal(
+        amount
+      );
+
+      await campaign.connect(donator).cancelPledge();
+      expect(await campaign.totalPledges()).to.equal(0);
+      expect(await campaign.numPledges()).to.equal(0);
+      expect(await ethers.provider.getBalance(campaign.address)).to.equal(0);
+    });
+
+    it("allows donators to cancel their pledges if the goal was reached but the deadline has not passed", async () => {
+      const signers = await ethers.getSigners();
+      const creator = signers[0];
+      const donator = signers[1];
+      const Campaign = await ethers.getContractFactory("Campaign");
+      const campaign = await Campaign.deploy(
+        campaignGoal,
+        campaignDeadline,
+        creator.address
+      );
+      await campaign.deployed();
+
+      const amount = ethers.utils.parseEther("1");
+
+      await campaign.connect(donator).pledge({
+        value: amount,
+      });
+
+      expect(await campaign.pledges(donator.address)).to.equal(amount);
+      expect(await campaign.totalPledges()).to.equal(amount);
+      expect(await campaign.numPledges()).to.equal(1);
+      expect(await ethers.provider.getBalance(campaign.address)).to.equal(
+        amount
+      );
+
+      await campaign.connect(donator).cancelPledge();
+      expect(await campaign.totalPledges()).to.equal(0);
+      expect(await campaign.numPledges()).to.equal(0);
+      expect(await ethers.provider.getBalance(campaign.address)).to.equal(0);
+    });
+
+    it("fails if no pledge has been made", async () => {
+      const signers = await ethers.getSigners();
+      const creator = signers[0];
+      const donator = signers[1];
+      const Campaign = await ethers.getContractFactory("Campaign");
+      const campaign = await Campaign.deploy(
+        campaignGoal,
+        campaignDeadline,
+        creator.address
+      );
+      await campaign.deployed();
+
+      expect(
+        campaign.connect(donator).cancelPledge()
+      ).to.eventually.be.rejectedWith("Have not pledged");
+    });
+
+    it("fails if the deadline has passed and the campaign was successful", async () => {
+      const signers = await ethers.getSigners();
+      const creator = signers[0];
+      const donator = signers[1];
+      const Campaign = await ethers.getContractFactory("Campaign");
+      const campaign = await Campaign.deploy(
+        campaignGoal,
+        campaignDeadline,
+        creator.address
+      );
+      await campaign.deployed();
+
+      const amount = ethers.utils.parseEther("1");
+
+      await campaign.connect(donator).pledge({
+        value: amount,
+      });
+
+      await campaign.updateDeadlineState(true);
+
+      expect(
+        campaign.connect(donator).cancelPledge()
+      ).to.eventually.be.rejectedWith("Campaign was successful");
     });
   });
 });

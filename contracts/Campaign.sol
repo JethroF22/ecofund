@@ -11,7 +11,6 @@ contract Campaign {
     mapping (address => uint256) public pledges;
     address[] public donators;
     uint256 public totalPledges = 0;
-    uint256 public numPledges = 0;
     bool public hasDeadlinePassed;
     bool private isActive;
     bool public isSuccessful;
@@ -42,7 +41,6 @@ contract Campaign {
         pledges[msg.sender] = msg.value;
         donators.push(msg.sender);
         totalPledges += msg.value;
-        numPledges += 1;
         if (address(this).balance >= campaignGoal) {
             isSuccessful = true;
         }
@@ -58,11 +56,49 @@ contract Campaign {
 
     function cancelCampaign() external _isCreator {
         updateCampaignState(false);
-        for (uint256 index = 0; index < numPledges; index++) {
+        uint256 arrayLength = numPledges();
+        for (uint256 index = 0; index < arrayLength; index++) {
             address payable donator = payable(donators[index]);
             uint256 pledgeAmount = pledges[donator];
             donator.transfer(pledgeAmount);
         }
+    }
+
+    function cancelPledge() external {
+        require(pledges[msg.sender] > 0, "Have not pledged");
+        require(!hasDeadlinePassed || !isSuccessful, "Campaign was successful");
+        uint256 pledgeAmount =  pledges[msg.sender];
+        totalPledges -= pledgeAmount;
+        delete pledges[msg.sender];
+        uint256 indexOf = _findIndexOfDonator(msg.sender);
+        _removeDonator(indexOf);
+        payable(msg.sender).transfer(pledgeAmount);
+    }
+
+    function numPledges() public view returns(uint256) {
+        return donators.length;
+    }
+
+    function _findIndexOfDonator(address _donator) internal view returns(uint256) {
+        uint256 indexOf = 0;
+        uint256 arrayLength = numPledges();
+        for (uint256 index = 0; index < arrayLength; index++) {
+            if (donators[index] == _donator) {
+                indexOf = index;
+                break;
+            }
+        }
+
+        return indexOf;
+    }
+
+    function _removeDonator(uint256 _index) internal {
+        if (_index >= donators.length) return;
+
+        for (uint i = _index; i < donators.length-1; i++){
+            donators[i] = donators[i+1];
+        }
+        donators.pop();
     }
 
     function withdraw() external _isCreator _isWithdrawable {

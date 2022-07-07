@@ -25,6 +25,7 @@ interface CampaignInterface extends ethers.utils.Interface {
     "campaignDeadline()": FunctionFragment;
     "campaignGoal()": FunctionFragment;
     "cancelCampaign()": FunctionFragment;
+    "cancelPledge()": FunctionFragment;
     "creator()": FunctionFragment;
     "donators(uint256)": FunctionFragment;
     "hasDeadlinePassed()": FunctionFragment;
@@ -47,6 +48,10 @@ interface CampaignInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "cancelCampaign",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "cancelPledge",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "creator", values?: undefined): string;
@@ -88,6 +93,10 @@ interface CampaignInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "cancelCampaign",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "cancelPledge",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "creator", data: BytesLike): Result;
@@ -168,6 +177,10 @@ export class Campaign extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    cancelPledge(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     creator(overrides?: CallOverrides): Promise<[string]>;
 
     donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
@@ -201,6 +214,10 @@ export class Campaign extends BaseContract {
   campaignGoal(overrides?: CallOverrides): Promise<BigNumber>;
 
   cancelCampaign(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  cancelPledge(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -238,6 +255,8 @@ export class Campaign extends BaseContract {
 
     cancelCampaign(overrides?: CallOverrides): Promise<void>;
 
+    cancelPledge(overrides?: CallOverrides): Promise<void>;
+
     creator(overrides?: CallOverrides): Promise<string>;
 
     donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
@@ -270,6 +289,10 @@ export class Campaign extends BaseContract {
     campaignGoal(overrides?: CallOverrides): Promise<BigNumber>;
 
     cancelCampaign(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    cancelPledge(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -307,6 +330,10 @@ export class Campaign extends BaseContract {
     campaignGoal(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     cancelCampaign(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    cancelPledge(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
