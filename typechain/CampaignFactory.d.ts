@@ -22,7 +22,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface CampaignFactoryInterface extends ethers.utils.Interface {
   functions: {
     "campaigns(uint256)": FunctionFragment;
-    "createCampaign(uint256,uint256,address)": FunctionFragment;
+    "createCampaign(uint256,address)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -31,7 +31,7 @@ interface CampaignFactoryInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "createCampaign",
-    values: [BigNumberish, BigNumberish, string]
+    values: [BigNumberish, string]
   ): string;
 
   decodeFunctionResult(functionFragment: "campaigns", data: BytesLike): Result;
@@ -91,7 +91,6 @@ export class CampaignFactory extends BaseContract {
 
     createCampaign(
       _campaignGoal: BigNumberish,
-      _campaignDeadline: BigNumberish,
       _creator: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -101,7 +100,6 @@ export class CampaignFactory extends BaseContract {
 
   createCampaign(
     _campaignGoal: BigNumberish,
-    _campaignDeadline: BigNumberish,
     _creator: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -111,7 +109,6 @@ export class CampaignFactory extends BaseContract {
 
     createCampaign(
       _campaignGoal: BigNumberish,
-      _campaignDeadline: BigNumberish,
       _creator: string,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -127,7 +124,6 @@ export class CampaignFactory extends BaseContract {
 
     createCampaign(
       _campaignGoal: BigNumberish,
-      _campaignDeadline: BigNumberish,
       _creator: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -141,7 +137,6 @@ export class CampaignFactory extends BaseContract {
 
     createCampaign(
       _campaignGoal: BigNumberish,
-      _campaignDeadline: BigNumberish,
       _creator: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

@@ -9,10 +9,13 @@ chai.use(chaiAsPromised);
 
 describe("Campaign", () => {
   const campaignGoal = 1000; // Goal in USDC
-  let campaignDeadline = new Date("2022-07-19").getTime() / 1000;
   const usdcAccountAddress = "0xe7804c37c13166ff0b37f5ae0bb07a3aebb6e245";
-
+  const adminAddress = "0x9613832c4e1987a1af5d0f59952262f60d641f35";
   let USDCcontract: Contract;
+
+  before(async () => {
+    const signers = await ethers.getSigners();
+  });
 
   beforeEach(async () => {
     await hre.network.provider.request({
@@ -49,6 +52,10 @@ describe("Campaign", () => {
       signers[2].address,
       10000
     );
+    await signers[0].sendTransaction({
+      to: adminAddress,
+      value: ethers.utils.parseEther("1"),
+    });
   });
 
   describe("creation", () => {
@@ -56,16 +63,11 @@ describe("Campaign", () => {
       const signers = await ethers.getSigners();
       const creator = signers[0].address;
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator);
       await campaign.deployed();
 
       expect(await campaign.creator()).to.equal(creator);
       expect(await campaign.campaignGoal()).to.equal(campaignGoal);
-      expect(await campaign.campaignDeadline()).to.equal(campaignDeadline);
     });
   });
 
@@ -75,11 +77,7 @@ describe("Campaign", () => {
       const creator = signers[0].address;
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator);
       await campaign.deployed();
       const amount = 100;
 
@@ -100,11 +98,7 @@ describe("Campaign", () => {
       const donatorOne = signers[1];
       const donatorTwo = signers[2];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator);
       await campaign.deployed();
       const amountOne = 100;
       const amountTwo = 1000;
@@ -140,11 +134,7 @@ describe("Campaign", () => {
       const creator = signers[0].address;
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator);
       await campaign.deployed();
 
       expect(campaign.connect(donator).pledge(0)).to.eventually.be.rejectedWith(
@@ -152,22 +142,23 @@ describe("Campaign", () => {
       );
     });
 
-    it("fails if the deadline has passed", async () => {
+    it("fails if withdrawals are unlocked", async () => {
       const signers = await ethers.getSigners();
       const creator = signers[0].address;
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator);
       await campaign.deployed();
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [adminAddress],
+      });
+      const adminSigner = await ethers.getSigner(adminAddress);
 
-      await campaign.updateDeadlineState(true);
+      await campaign.connect(adminSigner).setWithdrawalsLockedState(false);
 
       expect(campaign.connect(donator).pledge(0)).to.eventually.be.rejectedWith(
-        "Insufficient pledge"
+        "Pledges locked"
       );
     });
   });
@@ -177,11 +168,7 @@ describe("Campaign", () => {
       const signers = await ethers.getSigners();
       const creator = signers[0];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
       await campaign.deployed();
 
       const donatorOne = signers[1];
@@ -213,11 +200,7 @@ describe("Campaign", () => {
       const creator = signers[0].address;
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator);
       await campaign.deployed();
 
       expect(
@@ -230,11 +213,7 @@ describe("Campaign", () => {
       const creator = signers[0];
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
       await campaign.deployed();
 
       await campaign.connect(creator).cancelCampaign();
@@ -247,16 +226,11 @@ describe("Campaign", () => {
 
   describe("withdrawal", () => {
     it("allows creator to withdraw funds if the campaign is successful", async () => {
-      campaignDeadline = new Date("2022-07-5").getTime() / 1000;
       const signers = await ethers.getSigners();
       const creator = signers[0];
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
       await campaign.deployed();
 
       const amount = 1000;
@@ -267,24 +241,25 @@ describe("Campaign", () => {
       await campaign.connect(donator).pledge(amount);
 
       expect(await USDCcontract.balanceOf(campaign.address)).to.equal(amount);
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [adminAddress],
+      });
+      const adminSigner = await ethers.getSigner(adminAddress);
 
-      await campaign.updateDeadlineState(true);
+      await campaign.connect(adminSigner).setWithdrawalsLockedState(false);
 
       await campaign.connect(creator).withdraw();
 
       expect(await USDCcontract.balanceOf(campaign.address)).to.equal(0);
     });
 
-    it("doesn't allow withdrawal before the campaign deadline has passed", async () => {
+    it("doesn't allow withdrawal if they are locked", async () => {
       const signers = await ethers.getSigners();
       const creator = signers[0];
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
       await campaign.deployed();
 
       const amount = 1000;
@@ -295,31 +270,7 @@ describe("Campaign", () => {
 
       expect(
         campaign.connect(creator).withdraw()
-      ).to.eventually.be.rejectedWith("Deadline has not passed");
-    });
-
-    it("doesn't allow withdrawal if the goal hasn't been reached", async () => {
-      const signers = await ethers.getSigners();
-      const creator = signers[0];
-      const donator = signers[1];
-      const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
-      await campaign.deployed();
-      const amount = 500;
-      await USDCcontract.connect(donator).approve(campaign.address, 0);
-      await USDCcontract.connect(donator).approve(campaign.address, amount);
-
-      await campaign.connect(donator).pledge(amount);
-
-      await campaign.updateDeadlineState(true);
-
-      expect(
-        campaign.connect(creator).withdraw()
-      ).to.eventually.be.rejectedWith("Campaign goals not reached");
+      ).to.eventually.be.rejectedWith("Withdrawals locked");
     });
 
     it("doesn't allow someone besides the owner to withdraw the funds", async () => {
@@ -327,11 +278,7 @@ describe("Campaign", () => {
       const creator = signers[0];
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
       await campaign.deployed();
 
       const amount = 1000;
@@ -340,7 +287,13 @@ describe("Campaign", () => {
 
       await campaign.connect(donator).pledge(amount);
 
-      await campaign.updateDeadlineState(true);
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [adminAddress],
+      });
+      const adminSigner = await ethers.getSigner(adminAddress);
+
+      await campaign.connect(adminSigner).setWithdrawalsLockedState(false);
 
       expect(
         campaign.connect(donator).withdraw()
@@ -354,11 +307,7 @@ describe("Campaign", () => {
       const creator = signers[0];
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
       await campaign.deployed();
 
       const amount = 100;
@@ -377,45 +326,12 @@ describe("Campaign", () => {
       expect(await USDCcontract.balanceOf(campaign.address)).to.equal(0);
     });
 
-    it("allows donators to cancel their pledges if the goal was reached but the deadline has not passed", async () => {
-      const signers = await ethers.getSigners();
-      const creator = signers[0];
-      const donator = signers[1];
-      const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
-      await campaign.deployed();
-
-      const amount = 1000;
-      await USDCcontract.connect(donator).approve(campaign.address, 0);
-      await USDCcontract.connect(donator).approve(campaign.address, amount);
-
-      await campaign.connect(donator).pledge(amount);
-
-      expect(await campaign.pledges(donator.address)).to.equal(amount);
-      expect(await campaign.totalPledges()).to.equal(amount);
-      expect(await campaign.numPledges()).to.equal(1);
-      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(amount);
-
-      await campaign.connect(donator).cancelPledge();
-      expect(await campaign.totalPledges()).to.equal(0);
-      expect(await campaign.numPledges()).to.equal(0);
-      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(0);
-    });
-
     it("fails if no pledge has been made", async () => {
       const signers = await ethers.getSigners();
       const creator = signers[0];
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
       await campaign.deployed();
 
       expect(
@@ -423,16 +339,12 @@ describe("Campaign", () => {
       ).to.eventually.be.rejectedWith("Have not pledged");
     });
 
-    it("fails if the deadline has passed and the campaign was successful", async () => {
+    it("fails if withdrawals are unlocked", async () => {
       const signers = await ethers.getSigners();
       const creator = signers[0];
       const donator = signers[1];
       const Campaign = await ethers.getContractFactory("Campaign");
-      const campaign = await Campaign.deploy(
-        campaignGoal,
-        campaignDeadline,
-        creator.address
-      );
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
       await campaign.deployed();
 
       const amount = 1000;
@@ -440,8 +352,13 @@ describe("Campaign", () => {
       await USDCcontract.connect(donator).approve(campaign.address, amount);
 
       await campaign.connect(donator).pledge(amount);
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [adminAddress],
+      });
+      const adminSigner = await ethers.getSigner(adminAddress);
 
-      await campaign.updateDeadlineState(true);
+      await campaign.connect(adminSigner).setWithdrawalsLockedState(false);
 
       expect(
         campaign.connect(donator).cancelPledge()

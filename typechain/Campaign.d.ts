@@ -22,30 +22,27 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface CampaignInterface extends ethers.utils.Interface {
   functions: {
     "USDC_INSTANCE()": FunctionFragment;
-    "campaignDeadline()": FunctionFragment;
+    "admin()": FunctionFragment;
     "campaignGoal()": FunctionFragment;
     "cancelCampaign()": FunctionFragment;
     "cancelPledge()": FunctionFragment;
     "creator()": FunctionFragment;
     "donators(uint256)": FunctionFragment;
-    "hasDeadlinePassed()": FunctionFragment;
     "isSuccessful()": FunctionFragment;
     "numPledges()": FunctionFragment;
     "pledge(uint256)": FunctionFragment;
     "pledges(address)": FunctionFragment;
+    "setWithdrawalsLockedState(bool)": FunctionFragment;
     "totalPledges()": FunctionFragment;
-    "updateDeadlineState(bool)": FunctionFragment;
     "withdraw()": FunctionFragment;
+    "withdrawalsLocked()": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "USDC_INSTANCE",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "campaignDeadline",
-    values?: undefined
-  ): string;
+  encodeFunctionData(functionFragment: "admin", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "campaignGoal",
     values?: undefined
@@ -64,10 +61,6 @@ interface CampaignInterface extends ethers.utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "hasDeadlinePassed",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "isSuccessful",
     values?: undefined
   ): string;
@@ -81,23 +74,24 @@ interface CampaignInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "pledges", values: [string]): string;
   encodeFunctionData(
+    functionFragment: "setWithdrawalsLockedState",
+    values: [boolean]
+  ): string;
+  encodeFunctionData(
     functionFragment: "totalPledges",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "updateDeadlineState",
-    values: [boolean]
-  ): string;
   encodeFunctionData(functionFragment: "withdraw", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "withdrawalsLocked",
+    values?: undefined
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "USDC_INSTANCE",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "campaignDeadline",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "admin", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "campaignGoal",
     data: BytesLike
@@ -113,10 +107,6 @@ interface CampaignInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "creator", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "donators", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "hasDeadlinePassed",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "isSuccessful",
     data: BytesLike
   ): Result;
@@ -124,14 +114,18 @@ interface CampaignInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "pledge", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pledges", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "totalPledges",
+    functionFragment: "setWithdrawalsLockedState",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "updateDeadlineState",
+    functionFragment: "totalPledges",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawalsLocked",
+    data: BytesLike
+  ): Result;
 
   events: {};
 }
@@ -182,7 +176,7 @@ export class Campaign extends BaseContract {
   functions: {
     USDC_INSTANCE(overrides?: CallOverrides): Promise<[string]>;
 
-    campaignDeadline(overrides?: CallOverrides): Promise<[BigNumber]>;
+    admin(overrides?: CallOverrides): Promise<[string]>;
 
     campaignGoal(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -198,8 +192,6 @@ export class Campaign extends BaseContract {
 
     donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
 
-    hasDeadlinePassed(overrides?: CallOverrides): Promise<[boolean]>;
-
     isSuccessful(overrides?: CallOverrides): Promise<[boolean]>;
 
     numPledges(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -211,21 +203,23 @@ export class Campaign extends BaseContract {
 
     pledges(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    totalPledges(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    updateDeadlineState(
-      _hasPassed: boolean,
+    setWithdrawalsLockedState(
+      _state: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    totalPledges(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    withdrawalsLocked(overrides?: CallOverrides): Promise<[boolean]>;
   };
 
   USDC_INSTANCE(overrides?: CallOverrides): Promise<string>;
 
-  campaignDeadline(overrides?: CallOverrides): Promise<BigNumber>;
+  admin(overrides?: CallOverrides): Promise<string>;
 
   campaignGoal(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -241,8 +235,6 @@ export class Campaign extends BaseContract {
 
   donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-  hasDeadlinePassed(overrides?: CallOverrides): Promise<boolean>;
-
   isSuccessful(overrides?: CallOverrides): Promise<boolean>;
 
   numPledges(overrides?: CallOverrides): Promise<BigNumber>;
@@ -254,21 +246,23 @@ export class Campaign extends BaseContract {
 
   pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
-
-  updateDeadlineState(
-    _hasPassed: boolean,
+  setWithdrawalsLockedState(
+    _state: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
 
   withdraw(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  withdrawalsLocked(overrides?: CallOverrides): Promise<boolean>;
+
   callStatic: {
     USDC_INSTANCE(overrides?: CallOverrides): Promise<string>;
 
-    campaignDeadline(overrides?: CallOverrides): Promise<BigNumber>;
+    admin(overrides?: CallOverrides): Promise<string>;
 
     campaignGoal(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -280,8 +274,6 @@ export class Campaign extends BaseContract {
 
     donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-    hasDeadlinePassed(overrides?: CallOverrides): Promise<boolean>;
-
     isSuccessful(overrides?: CallOverrides): Promise<boolean>;
 
     numPledges(overrides?: CallOverrides): Promise<BigNumber>;
@@ -290,14 +282,16 @@ export class Campaign extends BaseContract {
 
     pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
-
-    updateDeadlineState(
-      _hasPassed: boolean,
+    setWithdrawalsLockedState(
+      _state: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
+    totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
+
     withdraw(overrides?: CallOverrides): Promise<void>;
+
+    withdrawalsLocked(overrides?: CallOverrides): Promise<boolean>;
   };
 
   filters: {};
@@ -305,7 +299,7 @@ export class Campaign extends BaseContract {
   estimateGas: {
     USDC_INSTANCE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    campaignDeadline(overrides?: CallOverrides): Promise<BigNumber>;
+    admin(overrides?: CallOverrides): Promise<BigNumber>;
 
     campaignGoal(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -321,8 +315,6 @@ export class Campaign extends BaseContract {
 
     donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
-    hasDeadlinePassed(overrides?: CallOverrides): Promise<BigNumber>;
-
     isSuccessful(overrides?: CallOverrides): Promise<BigNumber>;
 
     numPledges(overrides?: CallOverrides): Promise<BigNumber>;
@@ -334,22 +326,24 @@ export class Campaign extends BaseContract {
 
     pledges(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
-
-    updateDeadlineState(
-      _hasPassed: boolean,
+    setWithdrawalsLockedState(
+      _state: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    totalPledges(overrides?: CallOverrides): Promise<BigNumber>;
 
     withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    withdrawalsLocked(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
     USDC_INSTANCE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    campaignDeadline(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    admin(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     campaignGoal(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -368,8 +362,6 @@ export class Campaign extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    hasDeadlinePassed(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     isSuccessful(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     numPledges(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -384,15 +376,17 @@ export class Campaign extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    totalPledges(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    updateDeadlineState(
-      _hasPassed: boolean,
+    setWithdrawalsLockedState(
+      _state: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    totalPledges(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    withdrawalsLocked(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

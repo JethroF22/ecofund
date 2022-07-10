@@ -7,22 +7,21 @@ import "hardhat/console.sol";
 
 contract Campaign {
     IERC20 public constant USDC_INSTANCE = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
-    address payable public creator;
+    address public admin = 0x9613832C4E1987A1AF5d0f59952262F60d641F35;
+    address public creator;
     uint256 public campaignGoal;
-    uint256 public campaignDeadline;
     mapping (address => uint256) public pledges;
     address[] public donators;
     uint256 public totalPledges = 0;
-    bool public hasDeadlinePassed;
     bool private isActive;
     bool public isSuccessful;
+    bool public withdrawalsLocked;
 
-    constructor(uint256 _campaignGoal, uint256 _campaignDeadline, address _creator) {
-        creator = payable(_creator);
+    constructor(uint256 _campaignGoal, address _creator) {
+        creator = _creator;
         campaignGoal = _campaignGoal;
-        campaignDeadline = _campaignDeadline;
         isActive = true;
-        hasDeadlinePassed = false;
+        withdrawalsLocked = true;
     }
 
     modifier _isCreator() {
@@ -30,14 +29,18 @@ contract Campaign {
         _;
     }
 
+    modifier _isAdmin() {
+        require(msg.sender == admin, "Unauthorised");
+        _;
+    }
+
     modifier _isWithdrawable() {
-        require(hasDeadlinePassed, "Deadline has not passed");
-        require(isSuccessful, "Campaign goals not reached");
+        require(!withdrawalsLocked, "Withdrawals locked");
         _;
     }
 
     function pledge(uint256 _amount) external {
-        require(!hasDeadlinePassed, "Deadline has passed");
+        require(withdrawalsLocked, "Pledges locked");
         require(isActive, "Campaign cancelled");
         require(_amount > 0, "Insufficient pledge");
         require(USDC_INSTANCE.balanceOf(msg.sender) >= _amount, "Insufficient funds");
@@ -50,12 +53,12 @@ contract Campaign {
         }
     }
 
-    function updateDeadlineState(bool _hasPassed) external {
-        hasDeadlinePassed = _hasPassed;
-    }
-
     function updateCampaignState(bool _state) internal {
         isActive = _state;
+    }
+
+    function setWithdrawalsLockedState(bool _state) external _isAdmin {
+        withdrawalsLocked = _state;
     }
 
     function cancelCampaign() external _isCreator {
@@ -70,7 +73,7 @@ contract Campaign {
 
     function cancelPledge() external {
         require(pledges[msg.sender] > 0, "Have not pledged");
-        require(!hasDeadlinePassed || !isSuccessful, "Campaign was successful");
+        require(withdrawalsLocked, "Pledges locked");
         uint256 pledgeAmount =  pledges[msg.sender];
         totalPledges -= pledgeAmount;
         delete pledges[msg.sender];
