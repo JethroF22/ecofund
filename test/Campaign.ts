@@ -1,12 +1,55 @@
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
+import { Contract } from "ethers";
 import hre, { ethers } from "hardhat";
+
+import ERC20abi from "../abis/ERC20abi.json";
 
 chai.use(chaiAsPromised);
 
 describe("Campaign", () => {
-  const campaignGoal = ethers.utils.parseEther("1");
+  const campaignGoal = 1000; // Goal in USDC
   let campaignDeadline = new Date("2022-07-19").getTime() / 1000;
+  const usdcAccountAddress = "0xe7804c37c13166ff0b37f5ae0bb07a3aebb6e245";
+
+  let USDCcontract: Contract;
+
+  beforeEach(async () => {
+    await hre.network.provider.request({
+      method: "hardhat_reset",
+      params: [
+        {
+          forking: {
+            jsonRpcUrl: process.env.ALCHEMY_URL || "",
+            blockNumber: Number(process.env.FORK_BLOCK_NUMBER) || 30561376,
+          },
+        },
+      ],
+    });
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [usdcAccountAddress],
+    });
+    const sourceAccountSigner = await ethers.getSigner(usdcAccountAddress);
+    USDCcontract = await ethers.getContractAt(
+      ERC20abi,
+      "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+      sourceAccountSigner
+    );
+    const signers = await ethers.getSigners();
+    await USDCcontract.connect(sourceAccountSigner).transfer(
+      signers[0].address,
+      10000
+    );
+    await USDCcontract.connect(sourceAccountSigner).transfer(
+      signers[1].address,
+      10000
+    );
+    await USDCcontract.connect(sourceAccountSigner).transfer(
+      signers[2].address,
+      10000
+    );
+  });
 
   describe("creation", () => {
     it("creates a new campaign", async () => {
@@ -38,14 +81,16 @@ describe("Campaign", () => {
         creator
       );
       await campaign.deployed();
-      const amount = ethers.utils.parseEther("0.1");
+      const amount = 100;
 
-      await campaign.connect(donator).pledge({
-        value: amount,
-      });
+      await USDCcontract.connect(donator).approve(campaign.address, 0);
+      await USDCcontract.connect(donator).approve(campaign.address, amount);
+
+      await campaign.connect(donator).pledge(amount);
       expect(await campaign.pledges(donator.address)).to.equal(amount);
       expect(await campaign.totalPledges()).to.equal(amount);
       expect(await campaign.numPledges()).to.equal(1);
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(amount);
       expect(await campaign.isSuccessful()).to.equal(false);
     });
 
@@ -61,25 +106,31 @@ describe("Campaign", () => {
         creator
       );
       await campaign.deployed();
-      const amountOne = ethers.utils.parseEther("0.1");
-      const amountTwo = ethers.utils.parseEther("1");
+      const amountOne = 100;
+      const amountTwo = 1000;
+      await USDCcontract.connect(donatorOne).approve(campaign.address, 0);
+      await USDCcontract.connect(donatorOne).approve(
+        campaign.address,
+        amountOne
+      );
+      await USDCcontract.connect(donatorTwo).approve(campaign.address, 0);
+      await USDCcontract.connect(donatorTwo).approve(
+        campaign.address,
+        amountTwo
+      );
 
-      await campaign.connect(donatorOne).pledge({
-        value: amountOne,
-      });
+      await campaign.connect(donatorOne).pledge(amountOne);
 
       expect(await campaign.pledges(donatorOne.address)).to.equal(amountOne);
       expect(await campaign.numPledges()).to.equal(1);
-      expect(await ethers.provider.getBalance(campaign.address)).to.equal(
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(
         amountOne
       );
       expect(await campaign.isSuccessful()).to.equal(false);
 
-      await campaign.connect(donatorTwo).pledge({
-        value: amountTwo,
-      });
+      await campaign.connect(donatorTwo).pledge(amountTwo);
       expect(await campaign.pledges(donatorTwo.address)).to.equal(amountTwo);
-      expect(await campaign.totalPledges()).to.equal(amountOne.add(amountTwo));
+      expect(await campaign.totalPledges()).to.equal(1100);
       expect(await campaign.numPledges()).to.equal(2);
       expect(await campaign.isSuccessful()).to.equal(true);
     });
@@ -96,11 +147,9 @@ describe("Campaign", () => {
       );
       await campaign.deployed();
 
-      expect(
-        campaign.connect(donator).pledge({
-          value: 0,
-        })
-      ).to.eventually.be.rejectedWith("Insufficient pledge");
+      expect(campaign.connect(donator).pledge(0)).to.eventually.be.rejectedWith(
+        "Insufficient pledge"
+      );
     });
 
     it("fails if the deadline has passed", async () => {
@@ -117,11 +166,9 @@ describe("Campaign", () => {
 
       await campaign.updateDeadlineState(true);
 
-      expect(
-        campaign.connect(donator).pledge({
-          value: 0,
-        })
-      ).to.eventually.be.rejectedWith("Insufficient pledge");
+      expect(campaign.connect(donator).pledge(0)).to.eventually.be.rejectedWith(
+        "Insufficient pledge"
+      );
     });
   });
 
@@ -139,21 +186,26 @@ describe("Campaign", () => {
 
       const donatorOne = signers[1];
       const donatorTwo = signers[2];
+      const amountOne = 100;
+      const amountTwo = 900;
+      await USDCcontract.connect(donatorOne).approve(campaign.address, 0);
+      await USDCcontract.connect(donatorOne).approve(
+        campaign.address,
+        amountOne
+      );
+      await USDCcontract.connect(donatorTwo).approve(campaign.address, 0);
+      await USDCcontract.connect(donatorTwo).approve(
+        campaign.address,
+        amountTwo
+      );
 
-      const amountOne = ethers.utils.parseEther("0.1");
-      const amountTwo = ethers.utils.parseEther("1");
+      await campaign.connect(donatorOne).pledge(amountOne);
 
-      await campaign.connect(donatorOne).pledge({
-        value: amountOne,
-      });
-
-      await campaign.connect(donatorTwo).pledge({
-        value: amountTwo,
-      });
+      await campaign.connect(donatorTwo).pledge(amountTwo);
 
       await campaign.connect(creator).cancelCampaign();
 
-      expect(await ethers.provider.getBalance(campaign.address)).to.equal(0);
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(0);
     });
 
     it("only allows the creator to cancel the campaign", async () => {
@@ -185,14 +237,10 @@ describe("Campaign", () => {
       );
       await campaign.deployed();
 
-      const amount = ethers.utils.parseEther("0.1");
-
       await campaign.connect(creator).cancelCampaign();
 
       expect(
-        campaign.connect(donator).pledge({
-          value: amount,
-        })
+        campaign.connect(donator).pledge(100)
       ).to.eventually.be.rejectedWith("Campaign cancelled");
     });
   });
@@ -210,17 +258,21 @@ describe("Campaign", () => {
         creator.address
       );
       await campaign.deployed();
-      const amount = ethers.utils.parseEther("1");
 
-      await campaign.connect(donator).pledge({
-        value: amount,
-      });
+      const amount = 1000;
+
+      await USDCcontract.connect(donator).approve(campaign.address, 0);
+      await USDCcontract.connect(donator).approve(campaign.address, amount);
+
+      await campaign.connect(donator).pledge(amount);
+
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(amount);
 
       await campaign.updateDeadlineState(true);
 
       await campaign.connect(creator).withdraw();
 
-      expect(await ethers.provider.getBalance(campaign.address)).to.equal(0);
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(0);
     });
 
     it("doesn't allow withdrawal before the campaign deadline has passed", async () => {
@@ -234,11 +286,12 @@ describe("Campaign", () => {
         creator.address
       );
       await campaign.deployed();
-      const amount = ethers.utils.parseEther("1");
 
-      await campaign.connect(donator).pledge({
-        value: amount,
-      });
+      const amount = 1000;
+      await USDCcontract.connect(donator).approve(campaign.address, 0);
+      await USDCcontract.connect(donator).approve(campaign.address, amount);
+
+      await campaign.connect(donator).pledge(amount);
 
       expect(
         campaign.connect(creator).withdraw()
@@ -256,11 +309,11 @@ describe("Campaign", () => {
         creator.address
       );
       await campaign.deployed();
-      const amount = ethers.utils.parseEther("0.5");
+      const amount = 500;
+      await USDCcontract.connect(donator).approve(campaign.address, 0);
+      await USDCcontract.connect(donator).approve(campaign.address, amount);
 
-      await campaign.connect(donator).pledge({
-        value: amount,
-      });
+      await campaign.connect(donator).pledge(amount);
 
       await campaign.updateDeadlineState(true);
 
@@ -280,11 +333,12 @@ describe("Campaign", () => {
         creator.address
       );
       await campaign.deployed();
-      const amount = ethers.utils.parseEther("1");
 
-      await campaign.connect(donator).pledge({
-        value: amount,
-      });
+      const amount = 1000;
+      await USDCcontract.connect(donator).approve(campaign.address, 0);
+      await USDCcontract.connect(donator).approve(campaign.address, amount);
+
+      await campaign.connect(donator).pledge(amount);
 
       await campaign.updateDeadlineState(true);
 
@@ -307,23 +361,20 @@ describe("Campaign", () => {
       );
       await campaign.deployed();
 
-      const amount = ethers.utils.parseEther("0.1");
-
-      await campaign.connect(donator).pledge({
-        value: amount,
-      });
+      const amount = 100;
+      await USDCcontract.connect(donator).approve(campaign.address, 0);
+      await USDCcontract.connect(donator).approve(campaign.address, amount);
+      await campaign.connect(donator).pledge(amount);
 
       expect(await campaign.pledges(donator.address)).to.equal(amount);
       expect(await campaign.totalPledges()).to.equal(amount);
       expect(await campaign.numPledges()).to.equal(1);
-      expect(await ethers.provider.getBalance(campaign.address)).to.equal(
-        amount
-      );
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(amount);
 
       await campaign.connect(donator).cancelPledge();
       expect(await campaign.totalPledges()).to.equal(0);
       expect(await campaign.numPledges()).to.equal(0);
-      expect(await ethers.provider.getBalance(campaign.address)).to.equal(0);
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(0);
     });
 
     it("allows donators to cancel their pledges if the goal was reached but the deadline has not passed", async () => {
@@ -338,23 +389,21 @@ describe("Campaign", () => {
       );
       await campaign.deployed();
 
-      const amount = ethers.utils.parseEther("1");
+      const amount = 1000;
+      await USDCcontract.connect(donator).approve(campaign.address, 0);
+      await USDCcontract.connect(donator).approve(campaign.address, amount);
 
-      await campaign.connect(donator).pledge({
-        value: amount,
-      });
+      await campaign.connect(donator).pledge(amount);
 
       expect(await campaign.pledges(donator.address)).to.equal(amount);
       expect(await campaign.totalPledges()).to.equal(amount);
       expect(await campaign.numPledges()).to.equal(1);
-      expect(await ethers.provider.getBalance(campaign.address)).to.equal(
-        amount
-      );
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(amount);
 
       await campaign.connect(donator).cancelPledge();
       expect(await campaign.totalPledges()).to.equal(0);
       expect(await campaign.numPledges()).to.equal(0);
-      expect(await ethers.provider.getBalance(campaign.address)).to.equal(0);
+      expect(await USDCcontract.balanceOf(campaign.address)).to.equal(0);
     });
 
     it("fails if no pledge has been made", async () => {
@@ -386,11 +435,11 @@ describe("Campaign", () => {
       );
       await campaign.deployed();
 
-      const amount = ethers.utils.parseEther("1");
+      const amount = 1000;
+      await USDCcontract.connect(donator).approve(campaign.address, 0);
+      await USDCcontract.connect(donator).approve(campaign.address, amount);
 
-      await campaign.connect(donator).pledge({
-        value: amount,
-      });
+      await campaign.connect(donator).pledge(amount);
 
       await campaign.updateDeadlineState(true);
 

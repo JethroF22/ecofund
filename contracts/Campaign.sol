@@ -1,10 +1,12 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity =0.8.4;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "hardhat/console.sol";
 
 contract Campaign {
-
+    IERC20 public constant USDC_INSTANCE = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
     address payable public creator;
     uint256 public campaignGoal;
     uint256 public campaignDeadline;
@@ -34,14 +36,16 @@ contract Campaign {
         _;
     }
 
-    function pledge() external payable {
+    function pledge(uint256 _amount) external {
         require(!hasDeadlinePassed, "Deadline has passed");
         require(isActive, "Campaign cancelled");
-        require(msg.value > 0, "Insufficient pledge");
-        pledges[msg.sender] = msg.value;
+        require(_amount > 0, "Insufficient pledge");
+        require(USDC_INSTANCE.balanceOf(msg.sender) >= _amount, "Insufficient funds");
+        USDC_INSTANCE.transferFrom(msg.sender, address(this), _amount);
+        pledges[msg.sender] = _amount;
         donators.push(msg.sender);
-        totalPledges += msg.value;
-        if (address(this).balance >= campaignGoal) {
+        totalPledges += _amount;
+        if (totalPledges >= campaignGoal) {
             isSuccessful = true;
         }
     }
@@ -58,9 +62,9 @@ contract Campaign {
         updateCampaignState(false);
         uint256 arrayLength = numPledges();
         for (uint256 index = 0; index < arrayLength; index++) {
-            address payable donator = payable(donators[index]);
+            address donator = donators[index];
             uint256 pledgeAmount = pledges[donator];
-            donator.transfer(pledgeAmount);
+            USDC_INSTANCE.transfer(donator, pledgeAmount);
         }
     }
 
@@ -72,7 +76,7 @@ contract Campaign {
         delete pledges[msg.sender];
         uint256 indexOf = _findIndexOfDonator(msg.sender);
         _removeDonator(indexOf);
-        payable(msg.sender).transfer(pledgeAmount);
+        USDC_INSTANCE.transfer(msg.sender, pledgeAmount);
     }
 
     function numPledges() public view returns(uint256) {
@@ -102,6 +106,6 @@ contract Campaign {
     }
 
     function withdraw() external _isCreator _isWithdrawable {
-        creator.transfer(totalPledges);
+        USDC_INSTANCE.transfer(creator,totalPledges);
     }
 }
