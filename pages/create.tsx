@@ -1,7 +1,17 @@
 import React from "react";
 
+import BasePage from "../components/BasePage";
+import Container from "../components/common/Container";
+import CreateCampaignForm from "../components/forms/CreateCampaignForm";
+
 function create() {
-  return <div>create</div>;
+  return (
+    <Container>
+      <BasePage>
+        <CreateCampaignForm />
+      </BasePage>
+    </Container>
+  );
 }
 
 export default create;
