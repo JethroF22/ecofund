@@ -68,12 +68,17 @@ function CreateCampaignForm() {
             >
               Donation Goal
             </label>
-            <input
-              className="appearance-none block w-full text-black-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:border-gray-500"
-              id="grid-city"
-              type="number"
-              placeholder="Donation goal"
-            />
+            <div className="flex h-4/6">
+              <span className="w-1/12 h-full bg-gray-300 rounded-l text-center pt-3 text-gray-500">
+                $
+              </span>
+              <input
+                className="appearance-none block w-full text-black-700 border border-gray-200 rounded-r py-3 px-4 leading-tight focus:outline-none focus:border-gray-500"
+                id="grid-city"
+                type="number"
+                placeholder="Donation goal (USD)"
+              />
+            </div>
           </div>
         </div>
         <div className="flex flex-wrap -mx-3 mb-2">
