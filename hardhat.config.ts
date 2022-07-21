@@ -17,12 +17,16 @@ const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
     hardhat: {
-      chainId: 1,
+      chainId: 1337,
       forking: {
-        url: process.env.ALCHEMY_URL || "",
-        blockNumber: Number(process.env.FORK_BLOCK_NUMBER) || 30561376,
+        url: process.env.TESTNET_URL || "",
+        blockNumber: Number(process.env.TESTNET_FORK_BLOCK_NUMBER) || 27175375,
       },
-      // blockGasLimit: 2100000,
+      blockGasLimit: 2100000,
+    },
+    localhost: {
+      timeout: 100_000,
+      gas: 6000000,
     },
   },
   gasReporter: {
