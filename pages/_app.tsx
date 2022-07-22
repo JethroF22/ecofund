@@ -10,7 +10,14 @@ config.autoAddCss = false;
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <DAppProvider config={{}}>
+    <DAppProvider
+      config={{
+        multicallAddresses: {
+          "1337": "0xE9C09Cc1e780cfa90279eB23c3a1558Be71021ED",
+          "80001": "0xE9C09Cc1e780cfa90279eB23c3a1558Be71021ED",
+        },
+      }}
+    >
       <Component {...pageProps} />
     </DAppProvider>
   );

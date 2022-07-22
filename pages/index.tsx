@@ -25,7 +25,9 @@ const Landing: NextPage = () => {
           <FontAwesomeIcon icon={faSeedling} size="4x" color="white" />
         </div>
         <div className="flex items-center justify-center">
-          <Button onClick={openApp} text="Open App" />
+          <Button onClick={openApp}>
+            <p>Open App</p>
+          </Button>
         </div>
       </div>
     </Container>
