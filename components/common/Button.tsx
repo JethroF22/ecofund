@@ -2,17 +2,19 @@ import React from "react";
 
 interface Props {
   onClick(): void;
-  text: string;
+  children: JSX.Element;
+  className?: string;
 }
 
-function Button({ onClick, text }: Props) {
+function Button(props: Props) {
+  const baseClassName =
+    "text-white bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-pink-500 hover:to-yellow-500 rounded py-3 px-5";
+  const className = props.className
+    ? `${baseClassName} ${props.className}`
+    : baseClassName;
   return (
-    <button
-      type="button"
-      className="text-white bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-pink-500 hover:to-yellow-500 rounded py-3 px-5"
-      onClick={onClick}
-    >
-      {text}
+    <button type="button" className={className} onClick={props.onClick}>
+      {props.children}
     </button>
   );
 }
