@@ -1,7 +1,7 @@
 import * as Yup from "yup";
 
 export const createCampaignValidationSchema = Yup.object().shape({
-  campaignName: Yup.string().required("Please enter a campaign name"),
+  name: Yup.string().required("Please enter a campaign name"),
   description: Yup.string().required("Please enter a description"),
   campaignGoal: Yup.number().required("Please enter a description").min(1),
 });

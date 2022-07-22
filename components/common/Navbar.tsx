@@ -30,7 +30,9 @@ function Navbar() {
             </p>
           </div>
         </div>
-        <Button onClick={logout} text="Disconnect" />
+        <Button onClick={logout}>
+          <p>Disconnect</p>
+        </Button>
       </nav>
       <hr />
     </div>
