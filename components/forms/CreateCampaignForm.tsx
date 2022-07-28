@@ -181,7 +181,14 @@ function CreateCampaignForm() {
               <p className="uppercase text-l">Create</p>
             </Button>
           )}
-          {actionState && <p className="uppercase text-l">Loading...</p>}
+          {actionState && (
+            <div className="flex items-center justify-between">
+              <div className="mr-5">
+                <p className="text-lg">Loading...</p>
+              </div>
+              <div className="w-5 h-5 border-t-2 border-b-2 border-gray-900 rounded-full animate-spin"></div>
+            </div>
+          )}
         </div>
       </form>
     </div>
