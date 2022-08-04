@@ -40,8 +40,16 @@ interface CampaignFactoryInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
 
-  events: {};
+  events: {
+    "CampaignCreated(address)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "CampaignCreated"): EventFragment;
 }
+
+export type CampaignCreatedEvent = TypedEvent<
+  [string] & { newAddress: string }
+>;
 
 export class CampaignFactory extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -114,7 +122,15 @@ export class CampaignFactory extends BaseContract {
     ): Promise<void>;
   };
 
-  filters: {};
+  filters: {
+    "CampaignCreated(address)"(
+      newAddress?: null
+    ): TypedEventFilter<[string], { newAddress: string }>;
+
+    CampaignCreated(
+      newAddress?: null
+    ): TypedEventFilter<[string], { newAddress: string }>;
+  };
 
   estimateGas: {
     campaigns(

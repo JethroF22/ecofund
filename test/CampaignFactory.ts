@@ -14,11 +14,14 @@ describe("CampaignFactory", () => {
     const campaignFactory = await CampaignFactory.deploy();
     await campaignFactory.deployed();
 
-    await campaignFactory.createCampaign(campaignGoal, creator);
+    await expect(campaignFactory.createCampaign(campaignGoal, creator)).to.emit(
+      campaignFactory,
+      "CampaignCreated"
+    );
 
     const address = await campaignFactory.campaigns(0);
     const Campaign = await ethers.getContractFactory("Campaign");
-    const campaign = await Campaign.attach(address);
+    const campaign = Campaign.attach(address);
 
     expect(await campaign.creator()).to.equal(creator);
     expect(await campaign.campaignGoal()).to.equal(campaignGoal);

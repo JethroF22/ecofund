@@ -22,11 +22,11 @@ const config: HardhatUserConfig = {
         url: process.env.TESTNET_URL || "",
         blockNumber: Number(process.env.TESTNET_FORK_BLOCK_NUMBER) || 27175375,
       },
-      blockGasLimit: 2100000,
+      // blockGasLimit: 2100000,
     },
     localhost: {
       timeout: 100_000,
-      gas: 6000000,
+      // gas: 6000000,
     },
   },
   gasReporter: {
