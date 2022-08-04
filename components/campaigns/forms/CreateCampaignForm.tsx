@@ -6,10 +6,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileUpload } from "@fortawesome/free-solid-svg-icons";
 
-import { Campaign, CreateCampaignFormState } from "../../types/campaign";
-import { createCampaignValidationSchema } from "../../validation/forms/createCampaign";
-import Button from "../common/Button";
-import useCreateCampaign from "../../hooks/useCreateCampaign";
+import useCreateCampaign from "../../../hooks/useCreateCampaign";
+import { Campaign, CreateCampaignFormState } from "../../../types/campaign";
+import { createCampaignValidationSchema } from "../../../validation/forms/createCampaign";
+import Button from "../../common/Button";
 
 function CreateCampaignForm() {
   const { push } = useRouter();
@@ -44,10 +44,10 @@ function CreateCampaignForm() {
           bannerImage,
         };
         await createNewCampaign(campaign);
+        setActionState(false);
         push("/home");
       } catch (error) {
         console.log("error", error);
-      } finally {
         setActionState(false);
       }
     } else {
