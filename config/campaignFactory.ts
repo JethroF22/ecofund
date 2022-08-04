@@ -6,6 +6,19 @@ const config = {
   },
   abi: [
     {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: false,
+          internalType: "address",
+          name: "newAddress",
+          type: "address",
+        },
+      ],
+      name: "CampaignCreated",
+      type: "event",
+    },
+    {
       inputs: [
         {
           internalType: "uint256",
