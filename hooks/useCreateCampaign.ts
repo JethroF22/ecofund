@@ -1,41 +1,35 @@
-import { Buckets } from "@textile/hub";
-
+import useTextile from "./useTextile";
 import useCampaignFactoryContract from "./useCampaignFactoryContract";
 import { Campaign } from "../types/campaign";
 
 export default function useCreateCampaign() {
   const { createCampaign } = useCampaignFactoryContract();
+  const { getBuckets, getCampaignsBucket, getCampaignIndex } = useTextile();
 
   const createNewCampaign = async (campaign: Campaign) => {
+    console.log("creating campaign");
     const transaction = await createCampaign(campaign);
-    await transaction.wait();
-    const buckets = await Buckets.withKeyInfo({
-      key: process.env.NEXT_PUBLIC_HUB_API_KEY as string,
-      secret: process.env.NEXT_PUBLIC_HUB_API_SECRET as string,
-    });
-    const { root } = await buckets.getOrCreate("ecofund-campaigns", {
-      encrypted: false,
-    });
-
-    if (!root) throw new Error("bucket not created");
-    const bucketKey = root.key;
+    const result = await transaction.wait();
+    const campaignAddress = result.events[0].args[0];
+    console.log("created campaign at", campaignAddress);
+    console.log("writing to IPFS");
+    const buckets = await getBuckets();
+    const key = await getCampaignsBucket(buckets);
+    const index = await getCampaignIndex(buckets, key);
     await buckets.pushPath(
-      bucketKey,
-      `ecofund-campaigns/${campaign.name}/${campaign.bannerImage.name}`,
+      key,
+      `${campaign.name}`,
       campaign.bannerImage.stream()
     );
-    const buffer = Buffer.from(
-      JSON.stringify({
-        name: campaign.name,
-        campaignGoal: campaign.campaignGoal,
-        description: campaign.description,
-      })
-    );
-    await buckets.pushPath(
-      bucketKey,
-      `ecofund-campaigns/${campaign.name}/details.json`,
-      buffer
-    );
+    index.push({
+      name: campaign.name,
+      campaignGoal: campaign.campaignGoal,
+      description: campaign.description,
+      address: campaignAddress,
+    });
+    const buffer = Buffer.from(JSON.stringify(index));
+    await buckets.pushPath(key, `index.json`, buffer);
+    console.log("wrote campaign data to IPFS");
   };
 
   return {
