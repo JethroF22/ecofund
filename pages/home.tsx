@@ -36,11 +36,11 @@ const Home: NextPage = () => {
         <>
           {campaignsLoaded && <CampaignList />}
           {!campaignsLoaded && (
-            <div className="flex items-center justify-between h-4/5">
-              <div className="mr-5">
+            <div className="flex items-start justify-center h-3/5">
+              <div className="mr-10 h-20 flex items-center">
                 <p className="text-5xl">Loading...</p>
               </div>
-              <div className="w-20 h-20 border-t-2 border-b-2 border-gray-900 rounded-full animate-spin"></div>
+              <div className="ml-10 w-20 h-20 border-t-2 border-b-2 border-gray-900 rounded-full animate-spin"></div>
             </div>
           )}
         </>
