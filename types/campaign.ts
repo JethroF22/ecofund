@@ -12,4 +12,5 @@ export interface CampaignRecord extends CreateCampaignFormState {
 
 export interface Campaign extends CreateCampaignFormState {
   bannerImage: File;
+  deadline: number;
 }
