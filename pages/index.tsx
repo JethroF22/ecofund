@@ -19,7 +19,7 @@ const Landing: NextPage = () => {
   };
   return (
     <Container>
-      <div className="flex flex-col items-center justify-center w-3/6 h-2/5 m-auto ">
+      <div className="bg-gradient-to-br from-emerald-400 via-green-400 to-blue-500 flex flex-col items-center justify-center w-3/6 h-2/5 m-auto ">
         <div className="flex items-center justify-center mb-8">
           <p className="text-6xl text-white mr-10">EcoFund</p>
           <FontAwesomeIcon icon={faSeedling} size="4x" color="white" />

@@ -14,7 +14,7 @@ function Navbar() {
     router.replace("/");
   };
   return (
-    <div className="w-full">
+    <div className="w-full bg-gradient-to-r from-blue-400 via-green-400 to-emerald-500">
       <nav className="mx-10 my-2 flex items-center justify-between">
         <div className="w-2/5 flex items-center">
           <div className="flex items-center justify-center mr-10">
