@@ -25,9 +25,6 @@ function Navbar() {
             <p className="text-xl text-white mr-10 hover:underline">
               <Link href="/create">Create Campaign</Link>
             </p>
-            <p className="text-xl text-white mr-10 hover:underline">
-              <Link href="/browse">Browse Campaigns</Link>
-            </p>
           </div>
         </div>
         <Button onClick={logout}>
