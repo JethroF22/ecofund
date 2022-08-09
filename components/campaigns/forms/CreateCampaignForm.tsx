@@ -1,17 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
+import DatePicker from "react-datepicker";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileUpload } from "@fortawesome/free-solid-svg-icons";
 
 import useCreateCampaign from "../../../hooks/useCreateCampaign";
+
+import { Context } from "../../../context/state";
+
 import { Campaign, CreateCampaignFormState } from "../../../types/campaign";
+
 import { createCampaignValidationSchema } from "../../../validation/forms/createCampaign";
+
 import Button from "../../common/Button";
 
+import "react-datepicker/dist/react-datepicker.css";
+
 function CreateCampaignForm() {
+  const {
+    state: { campaigns },
+  } = useContext(Context);
   const { push } = useRouter();
   const { createNewCampaign } = useCreateCampaign();
   const formOptions = {
@@ -33,6 +44,7 @@ function CreateCampaignForm() {
   const inputProps = getInputProps();
   const [bannerImage, setBannerImage] = useState<File>();
   const [bannerImageError, setBannerImageError] = useState<string>();
+  const [campaignDeadline, setCampaignDeadline] = useState<Date>(new Date());
   const [actionState, setActionState] = useState<boolean>(false);
 
   const onSubmit = async (formState: CreateCampaignFormState) => {
@@ -42,8 +54,9 @@ function CreateCampaignForm() {
         const campaign: Campaign = {
           ...formState,
           bannerImage,
+          deadline: campaignDeadline.getTime() / 1000,
         };
-        await createNewCampaign(campaign);
+        await createNewCampaign(campaign, campaigns || []);
         setActionState(false);
         push("/home");
       } catch (error) {
@@ -63,21 +76,21 @@ function CreateCampaignForm() {
   }, [acceptedFiles]);
 
   return (
-    <div className="h-4/5 mt-10 w-3/5 flex flex-col items-center justify-start bg-white/40">
-      <p className="my-14 text-3xl text-white">New Campaign</p>
+    <div className="h-5/6 mt-10 w-3/5 flex flex-col items-center justify-start bg-white">
+      <p className="my-14 text-3xl text-black-700">New Campaign</p>
       <form className="w-full max-w-lg">
-        <div className="flex items-center justify-center -mx-3 mb-6">
+        <div className="flex items-center justify-center -mx-3 mb-4">
           <div className="w-full px-3 mb-6 md:mb-0">
             <label
               className="block uppercase tracking-wide text-black-700 text-xs font-bold mb-2"
-              htmlFor="grid-first-name"
+              htmlFor="campaign-name"
             >
               Campaign Name
             </label>
             <input
               {...register("name")}
-              className="appearance-none block w-full text-black-700 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:border-gray-500"
-              id="grid-first-name"
+              className=" block w-full text-black-700 rounded py-3 px-4 mb-3 border border-solid border-gray-300 focus:border-gray-500 focus:outline-none"
+              id="campaign-name"
               type="text"
               placeholder="Campaign Name"
             />
@@ -88,10 +101,10 @@ function CreateCampaignForm() {
             )}
           </div>
         </div>
-        <div className="flex flex-wrap -mx-3 mb-6">
+        <div className="flex flex-wrap -mx-3 mb-4">
           <div className="w-full px-3">
             <label
-              htmlFor="exampleFormControlTextarea1"
+              htmlFor="campaign-description"
               className="block uppercase tracking-wide text-black-700 text-xs font-bold mb-2"
             >
               Description
@@ -99,7 +112,7 @@ function CreateCampaignForm() {
             <textarea
               {...register("description")}
               className="form-control block w-full px-3 py-1.5 text-base font-normal text-black-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-black-700 focus:outline-none focus:border-gray-500"
-              id="exampleFormControlTextarea1"
+              id="campaign-description"
               rows={3}
               placeholder="Description"
             ></textarea>
@@ -110,11 +123,11 @@ function CreateCampaignForm() {
             )}
           </div>
         </div>
-        <div className="flex flex-wrap -mx-3 mb-2">
+        <div className="flex flex-wrap -mx-3 mb-4">
           <div className="w-full px-3 mb-6 md:mb-0">
             <label
               className="block uppercase tracking-wide text-black-700 text-xs font-bold mb-2"
-              htmlFor="grid-city"
+              htmlFor="donation-goal"
             >
               Donation Goal
             </label>
@@ -125,10 +138,31 @@ function CreateCampaignForm() {
               <input
                 {...register("campaignGoal")}
                 className="appearance-none block w-full text-black-700 border border-gray-200 rounded-r py-3 px-4 leading-tight focus:outline-none focus:border-gray-500"
-                id="grid-city"
+                id="donation-goal"
                 type="number"
                 placeholder="Donation goal (USD)"
               />{" "}
+              {errors.campaignGoal && (
+                <p className="text-red-500 text-xs italic">
+                  {errors.campaignGoal.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap -mx-3 mb-4">
+          <div className="w-full px-3 mb-6 md:mb-0">
+            <label
+              className="block uppercase tracking-wide text-black-700 text-xs font-bold mb-2"
+              htmlFor="grid-city"
+            >
+              Campaign Deadline
+            </label>
+            <div className="flex h-4/6">
+              <DatePicker
+                selected={campaignDeadline}
+                onChange={(date: Date) => setCampaignDeadline(date)}
+              />
               {errors.campaignGoal && (
                 <p className="text-red-500 text-xs italic">
                   {errors.campaignGoal.message}
@@ -151,7 +185,7 @@ function CreateCampaignForm() {
               onClick={inputProps.onClick}
               type={inputProps.type}
             />
-            <div className="w-full h-full bg-white cursor-pointer flex  items-center justify-center">
+            <div className="w-full h-full bg-white cursor-pointer flex border border-solid border-gray-300 focus:border-gray-500 focus:outline-none items-center justify-center">
               {bannerImage && (
                 <p className="font-bold text-gray-500 mr-5">
                   {bannerImage.name}
@@ -175,7 +209,7 @@ function CreateCampaignForm() {
             )}
           </div>
         </div>
-        <div className="flex mt-20 items-center justify-center">
+        <div className="flex mt-10 items-center justify-center">
           {!actionState && (
             <Button className="w-64" onClick={handleSubmit(onSubmit)}>
               <p className="uppercase text-l">Create</p>

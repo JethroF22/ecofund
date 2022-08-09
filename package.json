@@ -8,9 +8,10 @@
         "start": "next start",
         "lint": "next lint",
         "dev-node": "hardhat node",
-        "dev-deploy": "hardhat run --network localhost scripts/deploy.ts"
+        "dev-deploy": "ts-node scripts/createIndex.ts && hardhat run --network localhost scripts/deploy.ts"
     },
     "dependencies": {
+        "@fleekhq/fleek-storage-js": "^1.0.22",
         "@fortawesome/fontawesome-svg-core": "^6.1.1",
         "@fortawesome/free-solid-svg-icons": "^6.1.1",
         "@fortawesome/react-fontawesome": "^0.2.0",
@@ -22,6 +23,7 @@
         "@usedapp/core": "^1.1.0",
         "next": "12.2.0",
         "react": "18.2.0",
+        "react-datepicker": "^4.8.0",
         "react-dom": "18.2.0",
         "react-dropzone": "^14.2.2",
         "react-hook-form": "^7.33.1",

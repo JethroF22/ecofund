@@ -8,7 +8,7 @@ interface Props {
 
 const Home = ({ children }: Props): ReactElement<Props> => {
   return (
-    <div className="w-full h-full flex flex-col items-center">
+    <div className="w-full h-full flex flex-col justify-between">
       <Navbar />
       {children}
     </div>
