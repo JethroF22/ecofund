@@ -8,9 +8,11 @@ export default function useCreateCampaign() {
 
   const createNewCampaign = async (
     campaign: Campaign,
-    campaigns: CampaignRecord[]
+    campaigns: CampaignRecord[],
+    creator: string
   ) => {
     console.log("creating campaign");
+    const creationDate = new Date();
     const transaction = await createCampaign(campaign);
     const result = await transaction.wait();
     const campaignAddress = result.events[0].args[0];
@@ -24,6 +26,8 @@ export default function useCreateCampaign() {
       address: campaignAddress,
       deadline: campaign.deadline,
       bannerImage: uploadedFile.publicUrl,
+      creator,
+      creationDate,
     };
     console.log("updating index");
     campaigns.push(campaignRecord);
