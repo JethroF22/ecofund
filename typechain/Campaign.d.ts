@@ -28,6 +28,7 @@ interface CampaignInterface extends ethers.utils.Interface {
     "cancelPledge()": FunctionFragment;
     "creator()": FunctionFragment;
     "donators(uint256)": FunctionFragment;
+    "getPaginatedDonators(uint256)": FunctionFragment;
     "isSuccessful()": FunctionFragment;
     "numPledges()": FunctionFragment;
     "pledge(uint256)": FunctionFragment;
@@ -58,6 +59,10 @@ interface CampaignInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "creator", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "donators",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getPaginatedDonators",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -106,6 +111,10 @@ interface CampaignInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "creator", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "donators", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getPaginatedDonators",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "isSuccessful",
     data: BytesLike
@@ -192,6 +201,11 @@ export class Campaign extends BaseContract {
 
     donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
 
+    getPaginatedDonators(
+      _pageNumber: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string[]]>;
+
     isSuccessful(overrides?: CallOverrides): Promise<[boolean]>;
 
     numPledges(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -235,6 +249,11 @@ export class Campaign extends BaseContract {
 
   donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
+  getPaginatedDonators(
+    _pageNumber: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string[]>;
+
   isSuccessful(overrides?: CallOverrides): Promise<boolean>;
 
   numPledges(overrides?: CallOverrides): Promise<BigNumber>;
@@ -273,6 +292,11 @@ export class Campaign extends BaseContract {
     creator(overrides?: CallOverrides): Promise<string>;
 
     donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+    getPaginatedDonators(
+      _pageNumber: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string[]>;
 
     isSuccessful(overrides?: CallOverrides): Promise<boolean>;
 
@@ -314,6 +338,11 @@ export class Campaign extends BaseContract {
     creator(overrides?: CallOverrides): Promise<BigNumber>;
 
     donators(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    getPaginatedDonators(
+      _pageNumber: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     isSuccessful(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -359,6 +388,11 @@ export class Campaign extends BaseContract {
 
     donators(
       arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getPaginatedDonators(
+      _pageNumber: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

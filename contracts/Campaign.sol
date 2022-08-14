@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
 
 contract Campaign {
+    uint256 private constant PAGE_SIZE = 5;
     IERC20 public constant USDC_INSTANCE = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
     address public admin = 0x9613832C4E1987A1AF5d0f59952262F60d641F35;
     address public creator;
@@ -44,6 +45,7 @@ contract Campaign {
         require(isActive, "Campaign cancelled");
         require(_amount > 0, "Insufficient pledge");
         require(USDC_INSTANCE.balanceOf(msg.sender) >= _amount, "Insufficient funds");
+        console.log("new pledge from", msg.sender);
         USDC_INSTANCE.transferFrom(msg.sender, address(this), _amount);
         pledges[msg.sender] = _amount;
         donators.push(msg.sender);
@@ -82,10 +84,6 @@ contract Campaign {
         USDC_INSTANCE.transfer(msg.sender, pledgeAmount);
     }
 
-    function numPledges() public view returns(uint256) {
-        return donators.length;
-    }
-
     function _findIndexOfDonator(address _donator) internal view returns(uint256) {
         uint256 indexOf = 0;
         uint256 arrayLength = numPledges();
@@ -110,5 +108,30 @@ contract Campaign {
 
     function withdraw() external _isCreator _isWithdrawable {
         USDC_INSTANCE.transfer(creator,totalPledges);
+    }
+
+    function numPledges() public view returns(uint256) {
+        return donators.length;
+    }
+
+    function getPaginatedDonators(uint256 _pageNumber) public view returns(address[] memory) {
+        uint256 index = _pageNumber * PAGE_SIZE - PAGE_SIZE;
+        if (donators.length == 0 || index > donators.length - 1) {
+            return new address[](0);
+        }
+
+        address[] memory _donators = new address[](PAGE_SIZE);
+
+        uint256 counter = 0;
+
+        for (index; index < _pageNumber * PAGE_SIZE; index++) {
+            if (index <= donators.length - 1) {
+                _donators[counter] = donators[index];
+            } 
+
+            counter++;
+        }
+
+        return _donators;
     }
 }

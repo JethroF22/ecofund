@@ -1,6 +1,6 @@
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { Contract } from "ethers";
+import { Contract, constants } from "ethers";
 import hre, { ethers } from "hardhat";
 
 import ERC20abi from "../abis/ERC20abi.json";
@@ -14,10 +14,6 @@ describe("Campaign", () => {
   let USDCcontract: Contract;
 
   before(async () => {
-    const signers = await ethers.getSigners();
-  });
-
-  beforeEach(async () => {
     await hre.network.provider.request({
       method: "hardhat_reset",
       params: [
@@ -40,18 +36,12 @@ describe("Campaign", () => {
       sourceAccountSigner
     );
     const signers = await ethers.getSigners();
-    await USDCcontract.connect(sourceAccountSigner).transfer(
-      signers[0].address,
-      10000
-    );
-    await USDCcontract.connect(sourceAccountSigner).transfer(
-      signers[1].address,
-      10000
-    );
-    await USDCcontract.connect(sourceAccountSigner).transfer(
-      signers[2].address,
-      10000
-    );
+    signers.forEach(async (signer) => {
+      await USDCcontract.connect(sourceAccountSigner).transfer(
+        signer.address,
+        10000
+      );
+    });
     await signers[0].sendTransaction({
       to: adminAddress,
       value: ethers.utils.parseEther("1"),
@@ -363,6 +353,74 @@ describe("Campaign", () => {
       expect(
         campaign.connect(donator).cancelPledge()
       ).to.eventually.be.rejectedWith("Campaign was successful");
+    });
+  });
+
+  describe("getPaginatedDonators", () => {
+    it("returns a paginated array of donators", async () => {
+      const signers = await ethers.getSigners();
+      const creator = signers[0];
+      const donators = signers.slice(1, 9);
+      const Campaign = await ethers.getContractFactory("Campaign");
+      const campaign = await Campaign.deploy(campaignGoal, creator.address);
+      await campaign.deployed();
+
+      const amount = 1000;
+
+      await USDCcontract.connect(donators[0]).approve(campaign.address, 0);
+      await USDCcontract.connect(donators[0]).approve(campaign.address, amount);
+
+      await campaign.connect(donators[0]).pledge(amount);
+
+      await USDCcontract.connect(donators[1]).approve(campaign.address, 0);
+      await USDCcontract.connect(donators[1]).approve(campaign.address, amount);
+
+      await campaign.connect(donators[1]).pledge(amount);
+
+      await USDCcontract.connect(donators[2]).approve(campaign.address, 0);
+      await USDCcontract.connect(donators[2]).approve(campaign.address, amount);
+
+      await campaign.connect(donators[2]).pledge(amount);
+
+      await USDCcontract.connect(donators[3]).approve(campaign.address, 0);
+      await USDCcontract.connect(donators[3]).approve(campaign.address, amount);
+
+      await campaign.connect(donators[3]).pledge(amount);
+
+      await USDCcontract.connect(donators[4]).approve(campaign.address, 0);
+      await USDCcontract.connect(donators[4]).approve(campaign.address, amount);
+
+      await campaign.connect(donators[4]).pledge(amount);
+
+      await USDCcontract.connect(donators[5]).approve(campaign.address, 0);
+      await USDCcontract.connect(donators[5]).approve(campaign.address, amount);
+
+      await campaign.connect(donators[5]).pledge(amount);
+
+      await USDCcontract.connect(donators[6]).approve(campaign.address, 0);
+      await USDCcontract.connect(donators[6]).approve(campaign.address, amount);
+
+      await campaign.connect(donators[6]).pledge(amount);
+
+      await USDCcontract.connect(donators[7]).approve(campaign.address, 0);
+      await USDCcontract.connect(donators[7]).approve(campaign.address, amount);
+
+      await campaign.connect(donators[7]).pledge(amount);
+
+      const donatorsPageOne = await campaign.getPaginatedDonators(1);
+      expect(donatorsPageOne[0]).to.equal(donators[0].address);
+      expect(donatorsPageOne[1]).to.equal(donators[1].address);
+      expect(donatorsPageOne[2]).to.equal(donators[2].address);
+      expect(donatorsPageOne[3]).to.equal(donators[3].address);
+      expect(donatorsPageOne[4]).to.equal(donators[4].address);
+      console.log("donatorsPageOne", donatorsPageOne);
+      const donatorsPageTwo = await campaign.getPaginatedDonators(2);
+      console.log("donatorsPageTwo", donatorsPageTwo);
+      expect(donatorsPageTwo[0]).to.equal(donators[5].address);
+      expect(donatorsPageTwo[1]).to.equal(donators[6].address);
+      expect(donatorsPageTwo[2]).to.equal(donators[7].address);
+      expect(donatorsPageTwo[3]).to.equal(constants.AddressZero);
+      expect(donatorsPageTwo[4]).to.equal(constants.AddressZero);
     });
   });
 });
