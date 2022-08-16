@@ -14,7 +14,9 @@ config.autoAddCss = false;
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [state, dispatch] = useReducer(appContextReducer, {
-    campaigns: null,
+    campaigns: [],
+    isLoaded: false,
+    campaignDetails: {},
   } as AppContextState);
   return (
     <DAppProvider

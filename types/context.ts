@@ -1,6 +1,6 @@
 import { Dispatch } from "react";
 
-import { CampaignRecord } from "./campaign";
+import { Campaign, CampaignContractDetails } from "./campaign";
 
 export interface AppContext {
   dispatch: Dispatch<ContextUpdateAction>;
@@ -8,12 +8,20 @@ export interface AppContext {
 }
 
 export interface AppContextState {
-  campaigns: CampaignRecord[] | null;
+  campaigns: Campaign[];
+  isLoaded: boolean;
+  campaignDetails: CampaignContractState;
+}
+
+export interface CampaignContractState {
+  [key: string]: CampaignContractDetails;
 }
 
 export enum ActionTypes {
   ADD_CAMPAIGN = "ADD_CAMPAIGN",
   SET_CAMPAIGNS = "SET_CAMPAIGNS",
+  SET_CAMPAIGN_DETAILS = "SET_CAMPAIGN_DETAILS",
+  UPDATED_LOADED_STATE = "UPDATED_LOADED_STATE",
 }
 
 export interface ContextUpdateAction {

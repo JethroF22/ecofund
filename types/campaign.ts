@@ -4,13 +4,25 @@ export interface CreateCampaignFormState {
   description: string;
 }
 
-export interface CampaignRecord extends CreateCampaignFormState {
+export interface Campaign extends CreateCampaignFormState {
   address: string;
   bannerImage: string;
   deadline: number;
+  creator: string;
+  creationDate: Date;
 }
 
-export interface Campaign extends CreateCampaignFormState {
+export interface CampaignContractDetails {
+  donators: string[];
+  numPledges: number;
+  totalPledges: number;
+}
+
+export interface Donators {
+  [key: number]: string[];
+}
+
+export interface CampaignUpload extends CreateCampaignFormState {
   bannerImage: File;
   deadline: number;
 }

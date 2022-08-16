@@ -8,7 +8,7 @@
         "start": "next start",
         "lint": "next lint",
         "dev-node": "hardhat node",
-        "dev-deploy": "ts-node scripts/createIndex.ts && hardhat run --network localhost scripts/deploy.ts"
+        "dev-deploy": "yarn ts-node scripts/createIndex.ts && hardhat run --network localhost scripts/deploy.ts"
     },
     "dependencies": {
         "@fleekhq/fleek-storage-js": "^1.0.22",

@@ -413,9 +413,7 @@ describe("Campaign", () => {
       expect(donatorsPageOne[2]).to.equal(donators[2].address);
       expect(donatorsPageOne[3]).to.equal(donators[3].address);
       expect(donatorsPageOne[4]).to.equal(donators[4].address);
-      console.log("donatorsPageOne", donatorsPageOne);
       const donatorsPageTwo = await campaign.getPaginatedDonators(2);
-      console.log("donatorsPageTwo", donatorsPageTwo);
       expect(donatorsPageTwo[0]).to.equal(donators[5].address);
       expect(donatorsPageTwo[1]).to.equal(donators[6].address);
       expect(donatorsPageTwo[2]).to.equal(donators[7].address);
