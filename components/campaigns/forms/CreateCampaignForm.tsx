@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { useEthers } from "@usedapp/core";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import DatePicker from "react-datepicker";
@@ -20,6 +21,8 @@ import Button from "../../common/Button";
 import "react-datepicker/dist/react-datepicker.css";
 
 function CreateCampaignForm() {
+  const { account } = useEthers();
+  const router = useRouter();
   const {
     state: { campaigns },
   } = useContext(Context);
@@ -56,7 +59,7 @@ function CreateCampaignForm() {
           bannerImage,
           deadline: campaignDeadline.getTime() / 1000,
         };
-        await createNewCampaign(campaign, campaigns || []);
+        await createNewCampaign(campaign, campaigns || [], account);
         setActionState(false);
         push("/home");
       } catch (error) {
@@ -75,8 +78,14 @@ function CreateCampaignForm() {
     }
   }, [acceptedFiles]);
 
+  useEffect(() => {
+    if (!account) {
+      router.push("/");
+    }
+  }, [account]);
+
   return (
-    <div className="h-5/6 mt-10 w-3/5 flex flex-col items-center justify-start bg-white">
+    <div className="h-5/6 m-auto w-3/5 flex flex-col items-center justify-start bg-white">
       <p className="my-14 text-3xl text-black-700">New Campaign</p>
       <form className="w-full max-w-lg">
         <div className="flex items-center justify-center -mx-3 mb-4">
